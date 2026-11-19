@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hendar Voice Speech</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{min-height:100vh;background:#080d19;color:white;padding:25px 15px}
+.container{max-width:760px;margin:50px auto}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:55px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:bold;font-size:19px}
+.logo-icon{background:#1d3c70;padding:12px;border-radius:13px;color:#78adff}
+.status{background:#103c2b;color:#4ade80;padding:8px 13px;border-radius:30px;font-size:12px}
+.hero{text-align:center;margin-bottom:35px}
+.hero h1{font-size:clamp(30px,6vw,43px);margin-bottom:13px;letter-spacing:-1px}
+.hero h1 span{color:#6da6ff}
+.hero p{color:#929eb3;font-size:14px;line-height:1.7}
+.panel{background:#111a2b;border:1px solid #24324a;border-radius:20px;padding:25px;box-shadow:0 15px 50px #0005}
+label{display:block;margin-bottom:12px;font-weight:bold;font-size:14px}
+textarea,select{width:100%;border:1px solid #2c3b53;background:#0b1424;color:white;border-radius:12px;padding:15px;outline:none;font-size:15px}
+textarea{min-height:170px;resize:vertical;line-height:1.7}
+textarea:focus,select:focus{border-color:#528eff}
+.counter{color:#8493aa;text-align:right;font-size:12px;margin-top:8px;margin-bottom:25px}
+select{cursor:pointer;margin-bottom:22px}
+button{width:100%;border:0;background:linear-gradient(100deg,#286be9,#528eff);color:white;padding:16px;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;transition:.2s}
+button:hover{opacity:.9;transform:translateY(-1px)}
+button:disabled{opacity:.5;cursor:wait;transform:none}
+.result{display:none;margin-top:22px;padding:20px;border:1px solid #30415d;background:#0b1424;border-radius:14px}
+.result h3{margin-bottom:15px;font-size:15px}
+audio{width:100%;margin-bottom:15px}
+.download{display:block;text-align:center;text-decoration:none;color:white;background:#203b63;padding:13px;border-radius:10px;font-size:14px}
+.message{margin-top:15px;color:#a9b8d0;font-size:13px;text-align:center;line-height:1.6}
+.footer{text-align:center;color:#68768c;font-size:12px;margin-top:30px}
+@media(max-width:500px){.container{margin-top:20px}.panel{padding:18px}.nav{margin-bottom:45px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav class="nav">
+    <div class="logo"><div class="logo-icon">♫</div>Hendar Voice Speech</div>
+    <div class="status">● AI Online</div>
+  </nav>
+  <section class="hero">
+    <h1>Text To <span>Speech.</span></h1>
+    <p>Ubah tulisan menjadi suara AI dengan mudah.<br>Buat audio dan download hasilnya.</p>
+  </section>
+  <main class="panel">
+    <label for="inputText">Masukkan Teks</label>
+    <textarea id="inputText" maxlength="10000" placeholder="Tuliskan sesuatu yang ingin diubah menjadi suara..."></textarea>
+    <div class="counter"><span id="count">0</span> / 10000 karakter</div>
+    <label for="voice">Pilih Voice</label>
+    <select id="voice">
+      <option value="george">George</option>
+      <option value="aria">Aria</option>
+      <option value="roger">Roger</option>
+      <option value="sarah">Sarah</option>
+      <option value="laura">Laura</option>
+      <option value="charlie">Charlie</option>
+      <option value="callum">Callum</option>
+      <option value="river">River</option>
+      <option value="liam">Liam</option>
+      <option value="charlotte">Charlotte</option>
+      <option value="alice">Alice</option>
+      <option value="matilda">Matilda</option>
+      <option value="will">Will</option>
+      <option value="jessica">Jessica</option>
+      <option value="eric">Eric</option>
+      <option value="chris">Chris</option>
+      <option value="brian">Brian</option>
+      <option value="daniel">Daniel</option>
+      <option value="lily">Lily</option>
+      <option value="bill">Bill</option>
+    </select>
+    <button id="generate" onclick="generateVoice()">♫ Generate Voice</button>
+    <div class="message" id="message">Siap membuat suara AI kamu.</div>
+    <div class="result" id="result">
+      <h3>✓ Audio Berhasil Dibuat</h3>
+      <audio id="audio" controls></audio>
+      <a id="download" class="download" download="hendar-voice.mp3">↓ Download MP3</a>
+    </div>
+  </main>
+  <footer class="footer">Hendar Voice Speech © 2026<br>Powered by DataByte AI Gateway</footer>
+</div>
+<script>
+const input=document.getElementById("inputText");
+const count=document.getElementById("count");
+const button=document.getElementById("generate");
+const message=document.getElementById("message");
+const result=document.getElementById("result");
+const audio=document.getElementById("audio");
+const download=document.getElementById("download");
+let currentAudioUrl=null;
+input.addEventListener("input",()=>{count.textContent=input.value.length;});
+async function generateVoice(){
+  const text=input.value.trim();
+  const voice=document.getElementById("voice").value;
+  if(!text){message.textContent="Masukkan teks terlebih dahulu!";return;}
+  button.disabled=true;
+  button.textContent="⏳ Sedang Membuat Audio...";
+  message.textContent="Mohon tunggu, AI sedang memproses suara...";
+  result.style.display="none";
+  try{
+    const response=await fetch("/api/speech",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({input:text,voice})
+    });
+    if(!response.ok){
+      let error="Gagal membuat audio.";
+      try{const data=await response.json();error=data.error||error;}catch{}
+      throw new Error(error);
+    }
+    const blob=await response.blob();
+    if(!blob.size)throw new Error("Audio kosong diterima dari server.");
+    if(currentAudioUrl)URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl=URL.createObjectURL(blob);
+    audio.src=currentAudioUrl;
+    download.href=currentAudioUrl;
+    result.style.display="block";
+    message.textContent="Audio berhasil dibuat! Silakan dengarkan atau download.";
+  }catch(error){message.textContent="Error: "+error.message;}
+  finally{button.disabled=false;button.textContent="♫ Generate Voice";}
+}
+</script>
+</body>
+  </html>
+  
